@@ -16,6 +16,8 @@ import (
 	go get github.com/google/gopacket/pcap 
 */
 
+// might also need sudo apt-get install libpcap-dev for linux machines
+
 func main() {
     // Open the .pcap file
     handle, err := pcap.OpenOffline("example.pcap")
