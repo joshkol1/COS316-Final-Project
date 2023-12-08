@@ -26,17 +26,19 @@ def read():
 
     # Iterate over each packet
     for packet in packets:
-        # Check if the packet is an IP packet
-        if IP in packet:
-            ip_src = packet[IP].src
-            ip_dst = packet[IP].dst
-            print(f"IP Source: {ip_src}, IP Destination: {ip_dst}")
+        print(packet.show())
+        # # Check if the packet is an IP packet
+        # if IP in packet:
+        #     ip_src = packet[IP].src
+        #     ip_dst = packet[IP].dst
+        #     print(f"IP Source: {ip_src}, IP Destination: {ip_dst}")
 
-            # Check if the packet is a TCP packet
-            if TCP in packet:
-                tcp_sport = packet[TCP].sport
-                tcp_dport = packet[TCP].dport
-                print(f"TCP Source Port: {tcp_sport}, TCP Destination Port: {tcp_dport}")
+        #     # Check if the packet is a TCP packet
+        #     if TCP in packet:
+        #         tcp_sport = packet[TCP].sport
+        #         tcp_dport = packet[TCP].dport
+        #         print(packet.show(),'ss')
+        #         print(f"TCP Source Port: {tcp_sport}, TCP Destination Port: {tcp_dport}")
 
         print("-----")
 
