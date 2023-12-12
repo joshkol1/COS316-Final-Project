@@ -5,6 +5,7 @@ import (
 )
 
 type Chain struct {
+	chainName     string     // Name of the chain
 	chain         *list.List // List of rules in the chain
 	DefaultPolicy string     // Default policy of the chain
 }
@@ -15,7 +16,14 @@ func NewChain() *Chain {
 }
 
 func (c *Chain) GetRules() *list.List {
+
 	return c.chain
+}
+
+func (c *Chain) PrintRules() {
+	for e := c.chain.Front(); e != nil; e = e.Next() {
+		e.Value.(*Rule).PrintRule()
+	}
 }
 
 // Flushes the chain

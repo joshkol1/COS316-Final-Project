@@ -1,10 +1,14 @@
 package tables
 
 import (
+	"fmt"
+
 	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 )
 
 type Rule struct {
+	ChainName    string // Name of the chain the rule is in
 	Protocol     string // TCP, UDP, ICMP, etc.
 	SrcIP        string // Source IP address
 	SrcPort      string // Source port
@@ -21,6 +25,12 @@ func NewRule() *Rule {
 	return &Rule{}
 }
 
+// Prints the rule
+func (r *Rule) PrintRule() {
+	fmt.Printf("%+v\n", r)
+}
+
+// Checks if the given rule matches the current rule
 func (r *Rule) CheckMatch(otherRule Rule) bool {
 	if r.Protocol != otherRule.Protocol {
 		return false
@@ -59,30 +69,54 @@ THIS CURRENTLY ONLY IMPLEMENTS CHECKS FOR SOURCE AND DESTINATION IP AND PORT FOR
 STILL NEED TO ADD CHECKS FOR THE OTHER FIELDS
 */
 
-// Check if a packet matches the parameters listed in the rule struct
+// Checks if the given packet matches the rule
 func (r *Rule) CheckPacketMatch(packet gopacket.Packet) bool {
-	srcIP := packet.NetworkLayer().NetworkFlow().Src().String()
-	dstIP := packet.NetworkLayer().NetworkFlow().Dst().String()
-	if r.DstIP != "" {
-		if r.DstIP != dstIP {
-			return false
+	// Check Protocol
+	if r.Protocol != "" {
+		switch r.Protocol {
+		case "TCP":
+			if packet.Layer(layers.LayerTypeTCP) == nil {
+				return false
+			}
+		case "UDP":
+			if packet.Layer(layers.LayerTypeUDP) == nil {
+				return false
+			}
+		case "ICMP":
+			if packet.Layer(layers.LayerTypeICMPv4) == nil && packet.Layer(layers.LayerTypeICMPv6) == nil {
+				return false
+			}
+			// Add more protocols as needed
 		}
 	}
-	if r.SrcIP != "" {
-		if r.SrcIP != srcIP {
+
+	// Check Source and Destination IP
+	networkLayer := packet.NetworkLayer()
+	if networkLayer != nil {
+		srcIP := networkLayer.NetworkFlow().Src().String()
+		dstIP := networkLayer.NetworkFlow().Dst().String()
+
+		if r.SrcIP != "" && r.SrcIP != srcIP {
 			return false
 		}
-	}
-	if r.SrcPort != "" {
-		if r.SrcPort != packet.TransportLayer().TransportFlow().Src().String() {
+		if r.DstIP != "" && r.DstIP != dstIP {
 			return false
 		}
 	}
 
-	if r.DstPort != "" {
-		if r.DstPort != packet.TransportLayer().TransportFlow().Dst().String() {
+	// Check Source and Destination Port
+	transportLayer := packet.TransportLayer()
+	if transportLayer != nil {
+		srcPort := transportLayer.TransportFlow().Src().String()
+		dstPort := transportLayer.TransportFlow().Dst().String()
+
+		if r.SrcPort != "" && r.SrcPort != srcPort {
+			return false
+		}
+		if r.DstPort != "" && r.DstPort != dstPort {
 			return false
 		}
 	}
+
 	return true
 }
