@@ -36,11 +36,11 @@ func main() {
 	testTable := tables.NewTable()
 	testTable.LoadRules("test_rules2.txt")
 
-	testTable.PrintChains()
+	// testTable.PrintChains()
 
-	for _, v := range testTable.Chains {
-		v.PrintRules()
-	}
+	// for _, v := range testTable.Chains {
+	// 	v.PrintRules()
+	// }
 	// create new chains for the table
 	// chain1 := tables.NewChain()
 	// chain2 := tables.NewChain()

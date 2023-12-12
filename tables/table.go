@@ -75,7 +75,7 @@ func (table *Table) LoadRules(filename string) {
 	commandRegex := regexp.MustCompile(`(-F|-P|-N|-A|-I|-D|-R)`)
 	chainRegex := regexp.MustCompile(` [A-Z]{3,}`)
 	indexRegex := regexp.MustCompile(` [0-9]{1,}`)
-	actionRegex := regexp.MustCompile(`-j [A-Z]{3,}`)
+	// actionRegex := regexp.MustCompile(`-j [A-Z]{3,}`)
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -115,13 +115,22 @@ func (table *Table) LoadRules(filename string) {
 			chainMatches := chainRegex.FindStringSubmatch(line)
 			addChain := strings.TrimSpace(chainMatches[0])
 			chain := table.Chains[addChain]
-			// specs := strings.TrimSpace(strings.Split(strings.Split(line, command)[1], addChain)[1])
-			actionMatches := actionRegex.FindStringSubmatch(line)
-			action := strings.TrimSpace(actionMatches[0])
-			action = strings.TrimSpace(strings.Split(action, "-j")[0])
-			rule := NewRule()
-			rule.ChainName = addChain
-			rule.Action = action
+			// specs := strings.Split(strings.TrimSpace(strings.Split(strings.Split(line, command)[1], addChain)[1]), "-j")[0]
+			// fmt.Println("specs =", specs)
+			// actionMatches := actionRegex.FindStringSubmatch(line)
+			// action := strings.TrimSpace(actionMatches[0])
+			// action = strings.TrimSpace(strings.Split(action, "-j")[1])
+			// check if the line contains the string "--log-prefix"
+			rule := ParseRule(line)
+			// fmt.Printf("rule = %+v\n", rule)
+			// rule := NewRule()
+			// rule.ChainName = addChain
+			// rule.Action = action
+			// if strings.Contains(line, "--log-prefix") {
+			// 	logPrefixRegex := regexp.MustCompile(`--log-prefix\s+"([^"]+)"`)
+			// 	logPrefixRegexMatches := logPrefixRegex.FindStringSubmatch(line)[1]
+			// 	rule.LogPrefix = logPrefixRegexMatches
+			// }
 			chain.AppendRule(rule)
 		case "-I":
 			chainMatches := chainRegex.FindStringSubmatch(line)
@@ -130,30 +139,50 @@ func (table *Table) LoadRules(filename string) {
 			indexMatches := indexRegex.FindStringSubmatch(line)
 			index := strings.TrimSpace(indexMatches[0])
 			numIndex, _ := strconv.Atoi(index)
-			actionMatches := actionRegex.FindStringSubmatch(line)
-			action := strings.TrimSpace(actionMatches[0])
-			action = strings.TrimSpace(strings.Split(action, "-j")[0])
-			// specs := strings.TrimSpace(strings.Split(strings.Split(line, command)[1], addChain)[1])
-			rule := NewRule()
-			rule.ChainName = addChain
-			rule.Action = action
-			chain.InsertAtIndex(rule, numIndex)
+			// actionMatches := actionRegex.FindStringSubmatch(line)
+			// action := strings.TrimSpace(actionMatches[0])
+			// action = strings.TrimSpace(strings.Split(action, "-j")[1])
+			// specs := strings.TrimSpace(strings.Split(strings.Split(line, command)[1], addChain+" "+index)[1])
+			// specs = strings.TrimSpace(strings.Split(specs, "-j")[0])
+			rule := ParseRule(line)
+			// fmt.Printf("rule = %+v\n", rule)
+			// rule.ParseRule(line)
+			// rule.ChainName = addChain
+			// rule.Action = action
+			// if strings.Contains(line, "--log-prefix") {
+			// 	logPrefixRegex := regexp.MustCompile(`--log-prefix\s+"([^"]+)"`)
+			// 	logPrefixRegexMatches := logPrefixRegex.FindStringSubmatch(line)[1]
+			// 	rule.LogPrefix = logPrefixRegexMatches
+			// }
+			// if specs != "" {
+			// 	fmt.Println("no specs, line =", addChain, index, action)
+			// }
+			// fmt.Println("specs =", specs)
+			chain.InsertAtIndex(rule, numIndex-1)
 		case "-D":
 			chainMatches := chainRegex.FindStringSubmatch(line)
 			delChain := strings.TrimSpace(chainMatches[0])
 			chain := table.Chains[delChain]
 			indexMatches := indexRegex.FindStringSubmatch(line)
-			if len(indexMatches) > 0 {
+			if len(indexMatches) > 0 && strings.Contains(line, delChain+" "+indexMatches[0]) {
 				index := strings.TrimSpace(indexMatches[0])
 				numIndex, _ := strconv.Atoi(index)
-				chain.DeleteAtIndex(numIndex)
+				chain.DeleteAtIndex(numIndex - 1)
 			} else {
-				actionMatches := actionRegex.FindStringSubmatch(line)
-				action := strings.TrimSpace(actionMatches[0])
-				// specs := strings.TrimSpace(strings.Split(strings.Split(line, command)[1], delChain)[1])
-				action = strings.TrimSpace(strings.Split(action, "-j")[0])
-				rule := NewRule()
-				rule.Action = action
+				// actionMatches := actionRegex.FindStringSubmatch(line)
+				// action := strings.TrimSpace(actionMatches[0])
+				// // specs := strings.TrimSpace(strings.Split(strings.Split(line, command)[1], delChain)[1])
+				// // fmt.Println("specs =", line)
+				// action = strings.TrimSpace(strings.Split(action, "-j")[1])
+				// rule := NewRule()
+				// rule.Action = action
+				// if strings.Contains(line, "--log-prefix") {
+				// 	logPrefixRegex := regexp.MustCompile(`--log-prefix\s+"([^"]+)"`)
+				// 	logPrefixRegexMatches := logPrefixRegex.FindStringSubmatch(line)[1]
+				// 	rule.LogPrefix = logPrefixRegexMatches
+				// }
+				rule := ParseRule(line)
+				// fmt.Printf("rule = %+v\n", rule)
 				chain.DeleteMatchingRule(rule)
 			}
 		case "-R":
@@ -163,13 +192,21 @@ func (table *Table) LoadRules(filename string) {
 			indexMatches := indexRegex.FindStringSubmatch(line)
 			index := strings.TrimSpace(indexMatches[0])
 			numIndex, _ := strconv.Atoi(index)
-			actionMatches := actionRegex.FindStringSubmatch(line)
-			action := strings.TrimSpace(actionMatches[0])
-			action = strings.TrimSpace(strings.Split(action, "-j")[0])
+			// actionMatches := actionRegex.FindStringSubmatch(line)
+			// action := strings.TrimSpace(actionMatches[0])
+			// action = strings.TrimSpace(strings.Split(action, "-j")[1])
 			// specs := strings.TrimSpace(strings.Split(strings.Split(line, command)[1], addChain)[1])
-			rule := NewRule()
-			rule.Action = action
-			chain.ReplaceAtIndex(rule, numIndex)
+			// fmt.Println("specs =", line)
+			// rule := NewRule()
+			// rule.Action = action
+			// if strings.Contains(line, "--log-prefix") {
+			// 	logPrefixRegex := regexp.MustCompile(`--log-prefix\s+"([^"]+)"`)
+			// 	logPrefixRegexMatches := logPrefixRegex.FindStringSubmatch(line)[1]
+			// 	rule.LogPrefix = logPrefixRegexMatches
+			// }
+			rule := ParseRule(line)
+			// fmt.Printf("rule = %+v\n", rule)
+			chain.ReplaceAtIndex(rule, numIndex-1)
 		}
 	}
 
