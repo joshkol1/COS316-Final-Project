@@ -7,7 +7,8 @@ import (
 type Chain struct {
 	chainName     string     // Name of the chain
 	chain         *list.List // List of rules in the chain
-	DefaultPolicy string     // Default policy of the chain
+	defaultPolicy string     // Default policy of the chain
+	parentTable *Table // pointer to table the chain belongs to
 }
 
 // Create a new chain
@@ -15,9 +16,16 @@ func NewChain() *Chain {
 	return &Chain{chain: list.New()}
 }
 
-func (c *Chain) GetRules() *list.List {
+func (c *Chain) SetParentTable(table *Table) {
+	c.parentTable = table
+}
 
+func (c *Chain) GetRules() *list.List {
 	return c.chain
+}
+
+func (c *Chain) GetDefaultPolicy() string {
+	return c.defaultPolicy
 }
 
 func (c *Chain) PrintRules() {
@@ -34,7 +42,7 @@ func (c *Chain) Flush() {
 // Appends a rule to the end of the chain
 func (c *Chain) AppendRule(rule *Rule) {
 	if rule.Action == "" {
-		rule.Action = c.DefaultPolicy
+		rule.Action = c.defaultPolicy
 	}
 	c.chain.PushBack(rule)
 }
@@ -46,7 +54,7 @@ func (c *Chain) InsertAtIndex(rule *Rule, index int) {
 	}
 	// Check if the policy of the rule is empty and set it to defaultPolicy if so
 	if rule.Action == "" {
-		rule.Action = c.DefaultPolicy
+		rule.Action = c.defaultPolicy
 	}
 	if index == 0 {
 		c.chain.PushFront(rule)

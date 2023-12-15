@@ -16,16 +16,22 @@ type Rule struct {
 	SrcPort      string // Source port
 	DstIP        string // Destination IP address
 	DstPort      string // Destination port
-	InInterface  string // Incoming interface
+	InInterface  string // Incoming interface, mainly to check for loopback
 	OutInterface string // Outgoing interface
 	Action       string // ACCEPT, DROP, JUMP
 	JumpChain    string // Chain to jump to if action is JUMP
 	LogPrefix    string // Prefix for log messages
+	parentChain *Chain // pointer to chain that rule belongs to
+	checkEstablished bool
 }
 
 // Creates a new rule with the given parameters
 func NewRule() *Rule {
 	return &Rule{}
+}
+
+func (r *Rule) SetParentChain(*Chain chain) {
+	r.parentChain = chain
 }
 
 // Prints the rule
@@ -127,6 +133,21 @@ func (r *Rule) CheckPacketMatch(packet gopacket.Packet) bool {
 		}
 	}
 
+	if r.checkEstablished {
+		packet_info := scrIP+" "+srcPort+" "+dstIP+" "+dstPort
+		parent_table := r.parentChain.parentTable
+		if !parent_table.IsEstablishedConnection(packet_info) {
+			return false
+		}
+	}
+
+	if r.InInterface == "lo" || r.OutInterface == "lo" {
+		// check if not on loopback interface
+		if !(srcIP == "127.0.0.1" || dstIP == "127.0.0.1" || srcIP == "::1" || dstIP == "::1") {
+			return false
+		}
+	}
+
 	return true
 }
 
@@ -189,7 +210,13 @@ func ParseRule(ruleStr string) *Rule {
 					rule.LogPrefix = matches[1]
 				}
 			}
-
+		case "-m":
+			if parts[i+1] != "conntrack" || parts[i+2] != "--ctstate":
+				continue
+			if parts[i+3] != "ESTABLISHED" {
+				continue
+			}
+			rule.checkEstablished = true
 		}
 	}
 
