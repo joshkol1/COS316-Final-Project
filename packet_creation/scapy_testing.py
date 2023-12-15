@@ -5,7 +5,7 @@ def create():
     packets = []
 
     # Create a new packet
-    packet = Ether() / IP(dst="1.2.3.4") / TCP(dport=80)
+    packet = Ether() / IP(dst="1.2.3.4",src="4.3.6.8") / TCP(dport=80)
 
     # Add the packet to the packet list
     packets.append(packet)
@@ -27,19 +27,6 @@ def read():
     # Iterate over each packet
     for packet in packets:
         print(packet.show())
-        # # Check if the packet is an IP packet
-        # if IP in packet:
-        #     ip_src = packet[IP].src
-        #     ip_dst = packet[IP].dst
-        #     print(f"IP Source: {ip_src}, IP Destination: {ip_dst}")
-
-        #     # Check if the packet is a TCP packet
-        #     if TCP in packet:
-        #         tcp_sport = packet[TCP].sport
-        #         tcp_dport = packet[TCP].dport
-        #         print(packet.show(),'ss')
-        #         print(f"TCP Source Port: {tcp_sport}, TCP Destination Port: {tcp_dport}")
-
         print("-----")
 
 if __name__ == "__main__":

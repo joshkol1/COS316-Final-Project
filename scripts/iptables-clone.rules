@@ -1,0 +1,53 @@
+# Flush all existing rules
+iptables -F
+
+# Set default policies
+iptables -N INPUT
+iptables -N FORWARD
+iptables -N OUTPUT
+iptables -N TCP
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT ACCEPT
+iptables -P TCP LOG
+
+# Allow loopback traffic
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A OUTPUT -o lo -j ACCEPT
+
+# Allow established and related connections
+iptables -A INPUT -m conntrack --ctstate ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED -j ACCEPT
+
+# Insert rule to allow SSH at the top of the INPUT chain
+iptables -I INPUT 1 -p tcp --dport 22 -j ACCEPT
+
+# Delete the previously added SSH rule (as an example)
+iptables -D INPUT -p tcp --dport 22 -j ACCEPT
+
+# Re-insert SSH rule (demonstrating delete and re-insert)
+iptables -I INPUT 1 -p tcp --dport 22 -j ACCEPT
+
+# Allow HTTP and HTTPS traffic
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+
+# Mock TCP accept rules within TCP chain, jump from INPUT chain
+iptables -A INPUT -o tcp --dport 40 -j TCP
+iptables -A TCP -p tcp --dport 40 -j ACCEPT
+
+# Allow ICMP (Ping)
+iptables -A INPUT -p icmp -j ACCEPT
+
+# Allow DNS resolution
+iptables -A INPUT -p udp --dport 53 -j ACCEPT
+iptables -A INPUT -p tcp --dport 53 -j ACCEPT
+
+# Insert a logging rule for all incoming traffic (for testing)
+iptables -I INPUT 2 -j LOG --log-prefix "Incoming traffic: "
+
+# Delete the logging rule (as an example)
+iptables -D INPUT -j LOG --log-prefix "Incoming traffic: "
+
+# Re-insert the logging rule at a different position
+iptables -I INPUT 5 -j LOG --log-prefix "Incoming traffic: "
