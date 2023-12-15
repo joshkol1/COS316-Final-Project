@@ -89,7 +89,7 @@ func (c *Chain) DeleteAtIndex(index int) {
 func (c *Chain) DeleteMatchingRule(rule *Rule) {
 	for e := c.chain.Front(); e != nil; e = e.Next() {
 		if r, ok := e.Value.(*Rule); ok {
-			if r.CheckMatch(*rule) {
+			if r.CheckMatch(rule) {
 				c.chain.Remove(e)
 				return
 			}

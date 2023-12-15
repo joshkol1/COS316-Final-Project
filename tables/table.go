@@ -19,7 +19,7 @@ type Table struct {
 func NewTable() *Table {
 	return &Table{
 		Chains: make(map[string]*Chain),
-		EstablishedConnections: make(map[string]bool)
+		EstablishedConnections: make(map[string]bool),
 	}
 }
 
@@ -124,14 +124,14 @@ func (table *Table) LoadRules(filename string) {
 			if !exists {
 				fmt.Printf("Chain %s does not exist\n", addChain)
 			} else {
-				chain.DefaultPolicy = policy
+				chain.defaultPolicy = policy
 			}
 		case "-N":
 			parts := strings.Fields(strings.TrimSpace(strings.Split(line, command)[1]))
 			newChain := parts[0]
 			table.Chains[newChain] = NewChain()
 			table.Chains[newChain].chainName = newChain
-			table.Chains[newChain].setParentTable(table)
+			table.Chains[newChain].SetParentTable(table)
 		case "-F":
 			for _, v := range table.Chains {
 				v.Flush()
@@ -141,7 +141,7 @@ func (table *Table) LoadRules(filename string) {
 			addChain := strings.TrimSpace(chainMatches[0])
 			chain := table.Chains[addChain]
 			rule := ParseRule(line)
-			rule.setParentChain(chain)
+			rule.SetParentChain(chain)
 			chain.AppendRule(rule)
 		case "-I":
 			chainMatches := chainRegex.FindStringSubmatch(line)
@@ -151,7 +151,7 @@ func (table *Table) LoadRules(filename string) {
 			index := strings.TrimSpace(indexMatches[0])
 			numIndex, _ := strconv.Atoi(index)
 			rule := ParseRule(line)
-			rule.setParentChain(chain)
+			rule.SetParentChain(chain)
 			chain.InsertAtIndex(rule, numIndex-1)
 		case "-D":
 			chainMatches := chainRegex.FindStringSubmatch(line)
@@ -174,7 +174,7 @@ func (table *Table) LoadRules(filename string) {
 			index := strings.TrimSpace(indexMatches[0])
 			numIndex, _ := strconv.Atoi(index)
 			rule := ParseRule(line)
-			rule.setParentChain(chain)
+			rule.SetParentChain(chain)
 			chain.ReplaceAtIndex(rule, numIndex-1)
 		}
 	}

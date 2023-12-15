@@ -30,7 +30,7 @@ func NewRule() *Rule {
 	return &Rule{}
 }
 
-func (r *Rule) SetParentChain(*Chain chain) {
+func (r *Rule) SetParentChain(chain *Chain) {
 	r.parentChain = chain
 }
 
@@ -40,7 +40,7 @@ func (r *Rule) PrintRule() {
 }
 
 // Checks if the given rule matches the current rule
-func (r *Rule) CheckMatch(otherRule Rule) bool {
+func (r *Rule) CheckMatch(otherRule *Rule) bool {
 	if r.Protocol != otherRule.Protocol {
 		return false
 	}
@@ -107,9 +107,11 @@ func (r *Rule) CheckPacketMatch(packet gopacket.Packet) bool {
 
 	// Check Source and Destination IP
 	networkLayer := packet.NetworkLayer()
+	srcIP := ""
+	dstIP := ""
 	if networkLayer != nil {
-		srcIP := networkLayer.NetworkFlow().Src().String()
-		dstIP := networkLayer.NetworkFlow().Dst().String()
+		srcIP = networkLayer.NetworkFlow().Src().String()
+		dstIP = networkLayer.NetworkFlow().Dst().String()
 
 		if r.SrcIP != "" && r.SrcIP != srcIP {
 			return false
@@ -121,9 +123,11 @@ func (r *Rule) CheckPacketMatch(packet gopacket.Packet) bool {
 
 	// Check Source and Destination Port
 	transportLayer := packet.TransportLayer()
+	srcPort := ""
+	dstPort := ""
 	if transportLayer != nil {
-		srcPort := transportLayer.TransportFlow().Src().String()
-		dstPort := transportLayer.TransportFlow().Dst().String()
+		srcPort = transportLayer.TransportFlow().Src().String()
+		dstPort = transportLayer.TransportFlow().Dst().String()
 
 		if r.SrcPort != "" && r.SrcPort != srcPort {
 			return false
@@ -134,7 +138,7 @@ func (r *Rule) CheckPacketMatch(packet gopacket.Packet) bool {
 	}
 
 	if r.checkEstablished {
-		packet_info := scrIP+" "+srcPort+" "+dstIP+" "+dstPort
+		packet_info := srcIP+" "+srcPort+" "+dstIP+" "+dstPort
 		parent_table := r.parentChain.parentTable
 		if !parent_table.IsEstablishedConnection(packet_info) {
 			return false
@@ -211,8 +215,9 @@ func ParseRule(ruleStr string) *Rule {
 				}
 			}
 		case "-m":
-			if parts[i+1] != "conntrack" || parts[i+2] != "--ctstate":
+			if parts[i+1] != "conntrack" || parts[i+2] != "--ctstate" {
 				continue
+			}
 			if parts[i+3] != "ESTABLISHED" {
 				continue
 			}
